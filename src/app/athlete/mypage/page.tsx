@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 type Profile = {
   id: string
@@ -104,11 +105,6 @@ export default function MypagePage() {
       return { month, value: mv?.value || 0, measured_at: m.measured_at }
     }).filter((d) => d.value > 0)
   }, [data, selectedExercise])
-
-  const maxChartValue = useMemo(() => {
-    if (chartData.length === 0) return 100
-    return Math.max(...chartData.map((d) => d.value)) * 1.2
-  }, [chartData])
 
   if (loading) return <p className="text-gray-500">読み込み中...</p>
   if (!data) return <p className="text-red-500">データの取得に失敗しました</p>
@@ -216,31 +212,26 @@ export default function MypagePage() {
                 ))}
               </select>
             </div>
-            <div className="flex items-end gap-2 border-b border-l border-gray-200 p-2" style={{ height: '160px' }}>
-              {chartData.map((d, i) => {
-                const minValue = Math.min(...chartData.map((c) => c.value))
-                const range = maxChartValue - minValue * 0.8
-                const height = range > 0 ? ((d.value - minValue * 0.8) / range) * 100 : 50
-                const isLast = i === chartData.length - 1
-                return (
-                  <div key={d.measured_at} className="flex-1 flex flex-col items-center justify-end h-full">
-                    <div
-                      className={`w-full rounded-t transition-all ${isLast ? 'bg-primary' : 'bg-primary/40'}`}
-                      style={{ height: `${Math.max(height, 5)}%`, minHeight: '8px' }}
-                      title={`${d.value}`}
-                    />
-                    <span className="text-xs text-gray-400 mt-1 shrink-0">{d.month}</span>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="flex justify-between text-xs text-gray-400 mt-1 px-2">
-              {chartData.map((d, i) => (
-                <span key={d.measured_at} className={i === chartData.length - 1 ? 'font-bold text-primary' : ''}>
-                  {d.value}
-                </span>
-              ))}
-            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} domain={['dataMin - 5', 'dataMax + 5']} />
+                <Tooltip
+                  formatter={(val) => [`${val} ${exercises.find((e) => e.id === selectedExercise)?.unit || ''}`, '']}
+                  labelStyle={{ color: '#374151' }}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#1e3a5f"
+                  strokeWidth={2}
+                  dot={{ fill: '#1e3a5f', r: 5 }}
+                  activeDot={{ r: 7, fill: '#f59e0b' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </>
       )}
