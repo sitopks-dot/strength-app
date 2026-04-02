@@ -23,7 +23,7 @@ export async function PUT(
   }
 
   const body = await request.json()
-  const { name, number, position, weight, grade } = body
+  const { name, number, position, weight, birth_date } = body
 
   const admin = createAdminClient()
   const { error } = await admin
@@ -33,7 +33,7 @@ export async function PUT(
       number: number || null,
       position: position || null,
       weight: weight || null,
-      grade: grade || null,
+      birth_date: birth_date || null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

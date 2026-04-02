@@ -22,7 +22,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, number, position, weight, grade, role')
+    .select('id, name, number, position, weight, birth_date, role')
     .eq('team_id', DEFAULT_TEAM_ID)
     .eq('role', 'athlete')
     .order('number', { ascending: true })
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { name, email, password, number, position, weight, grade } = body
+  const { name, email, password, number, position, weight, birth_date } = body
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: '名前、メール、パスワードは必須です' }, { status: 400 })
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     number: number || null,
     position: position || null,
     weight: weight || null,
-    grade: grade || null,
+    birth_date: birth_date || null,
   })
 
   if (profileError) {

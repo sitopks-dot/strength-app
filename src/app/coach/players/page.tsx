@@ -8,7 +8,7 @@ type Player = {
   number: number | null
   position: string | null
   weight: number | null
-  grade: string | null
+  birth_date: string | null
 }
 
 type PlayerForm = {
@@ -18,15 +18,23 @@ type PlayerForm = {
   number: string
   position: string
   weight: string
-  grade: string
+  birth_date: string
 }
 
 const emptyForm: PlayerForm = {
-  name: '', email: '', password: '', number: '', position: '', weight: '', grade: '',
+  name: '', email: '', password: '', number: '', position: '', weight: '', birth_date: '',
 }
 
 const positions = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K/P']
-const grades = ['1年', '2年', '3年', '4年']
+
+function calcAge(birthDate: string): number {
+  const today = new Date()
+  const birth = new Date(birthDate)
+  let age = today.getFullYear() - birth.getFullYear()
+  const m = today.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--
+  return age
+}
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([])
@@ -56,7 +64,7 @@ export default function PlayersPage() {
       number: player.number?.toString() || '',
       position: player.position || '',
       weight: player.weight?.toString() || '',
-      grade: player.grade || '',
+      birth_date: player.birth_date || '',
     })
     setShowForm(true)
     setError('')
@@ -81,7 +89,7 @@ export default function PlayersPage() {
       number: form.number ? parseInt(form.number) : null,
       position: form.position || null,
       weight: form.weight ? parseFloat(form.weight) : null,
-      grade: form.grade || null,
+      birth_date: form.birth_date || null,
     }
 
     let res: Response
@@ -199,14 +207,15 @@ export default function PlayersPage() {
               onChange={(e) => setForm({ ...form, weight: e.target.value })}
               className="border rounded-lg px-3 py-2 text-sm"
             />
-            <select
-              value={form.grade}
-              onChange={(e) => setForm({ ...form, grade: e.target.value })}
-              className="border rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="">学年選択</option>
-              {grades.map((g) => <option key={g} value={g}>{g}</option>)}
-            </select>
+            <div>
+              <input
+                type="date"
+                value={form.birth_date}
+                onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
+                className="border rounded-lg px-3 py-2 text-sm w-full"
+                title="生年月日"
+              />
+            </div>
           </div>
 
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -238,7 +247,7 @@ export default function PlayersPage() {
               <th className="px-4 py-3 text-left font-medium text-gray-600">名前</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Pos</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">体重</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">学年</th>
+              <th className="px-4 py-3 text-left font-medium text-gray-600">年齢</th>
               <th className="px-4 py-3 text-center font-medium text-gray-600">操作</th>
             </tr>
           </thead>
@@ -262,7 +271,7 @@ export default function PlayersPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">{player.weight ? `${player.weight}kg` : '-'}</td>
-                  <td className="px-4 py-3">{player.grade || '-'}</td>
+                  <td className="px-4 py-3">{player.birth_date ? `${calcAge(player.birth_date)}歳` : '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => handleEdit(player)}
