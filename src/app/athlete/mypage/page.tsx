@@ -216,18 +216,20 @@ export default function MypagePage() {
                 ))}
               </select>
             </div>
-            <div className="flex items-end gap-2 h-32 border-b border-l border-gray-200 p-2">
+            <div className="flex items-end gap-2 border-b border-l border-gray-200 p-2" style={{ height: '160px' }}>
               {chartData.map((d, i) => {
-                const height = maxChartValue > 0 ? (d.value / maxChartValue) * 100 : 0
+                const minValue = Math.min(...chartData.map((c) => c.value))
+                const range = maxChartValue - minValue * 0.8
+                const height = range > 0 ? ((d.value - minValue * 0.8) / range) * 100 : 50
                 const isLast = i === chartData.length - 1
                 return (
-                  <div key={d.measured_at} className="flex-1 flex flex-col items-center justify-end">
+                  <div key={d.measured_at} className="flex-1 flex flex-col items-center justify-end h-full">
                     <div
-                      className={`w-full rounded-t transition-all ${isLast ? 'bg-primary' : 'bg-primary/30'}`}
-                      style={{ height: `${height}%` }}
+                      className={`w-full rounded-t transition-all ${isLast ? 'bg-primary' : 'bg-primary/40'}`}
+                      style={{ height: `${Math.max(height, 5)}%`, minHeight: '8px' }}
                       title={`${d.value}`}
                     />
-                    <span className="text-xs text-gray-400 mt-1">{d.month}</span>
+                    <span className="text-xs text-gray-400 mt-1 shrink-0">{d.month}</span>
                   </div>
                 )
               })}
