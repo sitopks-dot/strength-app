@@ -9,6 +9,9 @@ type Exercise = {
   unit: string
 }
 
+const MAX_VIDEO_SIZE_MB = 50
+const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_MB * 1024 * 1024
+
 export default function InputPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [values, setValues] = useState<Record<string, string>>({})
@@ -62,6 +65,15 @@ export default function InputPage() {
       setError('少なくとも1つの測定値を入力してください')
       setSubmitting(false)
       return
+    }
+
+    // 動画サイズチェック
+    for (const video of videos) {
+      if (video.size > MAX_VIDEO_SIZE) {
+        setError(`「${video.name}」のサイズが${MAX_VIDEO_SIZE_MB}MBを超えています（${(video.size / 1024 / 1024).toFixed(1)}MB）。動画を圧縮してから再度アップロードしてください。`)
+        setSubmitting(false)
+        return
+      }
     }
 
     // 動画アップロード
