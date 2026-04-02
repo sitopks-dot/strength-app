@@ -3,23 +3,32 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import CoachNav from '@/components/CoachNav'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CoachLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let profile: { name: string; role: string } | null = null
 
-  if (!user) redirect('/login')
+  try {
+    const supabase = await createServerSupabaseClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, role')
-    .eq('id', user.id)
-    .single()
+    const { data } = await supabase
+      .from('profiles')
+      .select('name, role')
+      .eq('id', user.id)
+      .single()
 
-  if (!profile || profile.role !== 'coach') redirect('/')
+    profile = data
+  } catch {
+    redirect('/login')
+  }
+
+  if (!profile || profile.role !== 'coach') redirect('/login')
 
   return (
     <>
