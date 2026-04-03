@@ -191,7 +191,7 @@ export default function MypagePage() {
       )}
 
       {/* 推移グラフ */}
-      {chartData.length > 0 && (
+      {data.measurements.length > 0 && (
         <>
           <h3 className="font-bold text-gray-800 mb-3">測定推移</h3>
           <div className="bg-white rounded-xl p-4 shadow-sm border mb-6">
@@ -212,26 +212,32 @@ export default function MypagePage() {
                 ))}
               </select>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} domain={['dataMin - 5', 'dataMax + 5']} />
-                <Tooltip
-                  formatter={(val) => [`${val} ${exercises.find((e) => e.id === selectedExercise)?.unit || ''}`, '']}
-                  labelStyle={{ color: '#374151' }}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#1e3a5f"
-                  strokeWidth={2}
-                  dot={{ fill: '#1e3a5f', r: 5 }}
-                  activeDot={{ r: 7, fill: '#f59e0b' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <YAxis tick={{ fontSize: 12, fill: '#9ca3af' }} domain={['dataMin - 5', 'dataMax + 5']} />
+                  <Tooltip
+                    formatter={(val) => [`${val} ${exercises.find((e) => e.id === selectedExercise)?.unit || ''}`, '']}
+                    labelStyle={{ color: '#374151' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#1e3a5f"
+                    strokeWidth={2}
+                    dot={{ fill: '#1e3a5f', r: 5 }}
+                    activeDot={{ r: 7, fill: '#f59e0b' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-gray-400 text-sm">
+                この種目の記録はまだありません
+              </div>
+            )}
           </div>
         </>
       )}

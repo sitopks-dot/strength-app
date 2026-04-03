@@ -24,6 +24,7 @@ export default function InputPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [updated, setUpdated] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
@@ -116,6 +117,8 @@ export default function InputPage() {
       return
     }
 
+    const resData = await res.json()
+    setUpdated(!!resData.updated)
     setSuccess(true)
     setSubmitting(false)
     setValues({})
@@ -128,8 +131,8 @@ export default function InputPage() {
     return (
       <div className="text-center py-12">
         <div className="text-5xl mb-4">✅</div>
-        <h2 className="text-xl font-bold text-field mb-2">送信完了！</h2>
-        <p className="text-gray-500 mb-6">測定結果が登録されました</p>
+        <h2 className="text-xl font-bold text-field mb-2">{updated ? '更新完了！' : '送信完了！'}</h2>
+        <p className="text-gray-500 mb-6">{updated ? '測定結果を上書き更新しました' : '測定結果が登録されました'}</p>
         <button
           onClick={() => setSuccess(false)}
           className="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-light transition"

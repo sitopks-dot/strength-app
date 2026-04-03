@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 const DEFAULT_TEAM_ID = '00000000-0000-0000-0000-000000000001'
 
-// POST: 測定データ送信
+// POST: 測定データ送信（既存があれば上書き）
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -11,11 +11,22 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const { measured_at, values, video_paths } = body
-  // values: [{ exercise_id, value }]
-  // video_paths: [{ storage_path, file_name, file_size }]
 
   if (!measured_at || !values || values.length === 0) {
     return NextResponse.json({ error: '測定月と測定値は必須です' }, { status: 400 })
+  }
+
+  // 既存の測定を確認
+  const { data: existing } = await supabase
+    .from('measurements')
+    .select('id')
+    .eq('profile_id', user.id)
+    .eq('measured_at', measured_at)
+    .single()
+
+  // 既存があれば削除（CASCADE で values, videos も消える）
+  if (existing) {
+    await supabase.from('measurements').delete().eq('id', existing.id)
   }
 
   // measurement 作成
@@ -30,9 +41,6 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (mError) {
-    if (mError.code === '23505') {
-      return NextResponse.json({ error: 'この月の測定は既に登録されています' }, { status: 409 })
-    }
     return NextResponse.json({ error: mError.message }, { status: 500 })
   }
 
@@ -63,7 +71,10 @@ export async function POST(request: NextRequest) {
     await supabase.from('measurement_videos').insert(videoRows)
   }
 
-  return NextResponse.json({ id: measurement.id }, { status: 201 })
+  return NextResponse.json({
+    id: measurement.id,
+    updated: !!existing,
+  }, { status: 201 })
 }
 
 // GET: 自分の測定履歴取得
