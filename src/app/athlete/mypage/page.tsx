@@ -10,6 +10,7 @@ type Profile = {
   position: string | null
   weight: number | null
   birth_date: string | null
+  avatar_url: string | null
 }
 
 type MeasurementValue = {
@@ -116,8 +117,12 @@ export default function MypagePage() {
       {/* プロフィール */}
       <div className="bg-white rounded-xl p-4 shadow-sm border mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold">
-            {profile.number || '?'}
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              profile.number || '?'
+            )}
           </div>
           <div>
             <h2 className="text-lg font-bold">{profile.name}</h2>

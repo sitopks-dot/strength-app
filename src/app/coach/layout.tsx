@@ -10,7 +10,7 @@ export default async function CoachLayout({
 }: {
   children: React.ReactNode
 }) {
-  let profile: { name: string; role: string } | null = null
+  let profile: { name: string; role: string; avatar_url: string | null } | null = null
 
   try {
     const supabase = await createServerSupabaseClient()
@@ -19,7 +19,7 @@ export default async function CoachLayout({
 
     const { data } = await supabase
       .from('profiles')
-      .select('name, role')
+      .select('name, role, avatar_url')
       .eq('id', user.id)
       .single()
 
@@ -32,7 +32,7 @@ export default async function CoachLayout({
 
   return (
     <>
-      <Header name={profile.name} role="coach" />
+      <Header name={profile.name} role="coach" avatarUrl={profile.avatar_url} />
       <CoachNav />
       <main className="flex-1">
         <div className="max-w-6xl mx-auto p-4">

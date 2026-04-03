@@ -23,17 +23,22 @@ export async function PUT(
   }
 
   const body = await request.json()
-  const { name, number, position, weight, birth_date } = body
+  const { name, number, position, weight, birth_date, avatar_url } = body
 
   const admin = createAdminClient()
+  const updateData: Record<string, unknown> = {
+    name,
+    number: number || null,
+    position: position || null,
+    weight: weight || null,
+    birth_date: birth_date || null,
+  }
+  if (avatar_url !== undefined) updateData.avatar_url = avatar_url || null
+
   const { error } = await admin
     .from('profiles')
     .update({
-      name,
-      number: number || null,
-      position: position || null,
-      weight: weight || null,
-      birth_date: birth_date || null,
+      ...updateData,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

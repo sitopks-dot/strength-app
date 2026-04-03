@@ -10,7 +10,7 @@ export default async function AthleteLayout({
 }: {
   children: React.ReactNode
 }) {
-  let profile: { name: string; role: string } | null = null
+  let profile: { name: string; role: string; avatar_url: string | null } | null = null
 
   try {
     const supabase = await createServerSupabaseClient()
@@ -19,7 +19,7 @@ export default async function AthleteLayout({
 
     const { data } = await supabase
       .from('profiles')
-      .select('name, role')
+      .select('name, role, avatar_url')
       .eq('id', user.id)
       .single()
 
@@ -32,7 +32,7 @@ export default async function AthleteLayout({
 
   return (
     <>
-      <Header name={profile.name} role="athlete" />
+      <Header name={profile.name} role="athlete" avatarUrl={profile.avatar_url} />
       <main className="flex-1">
         <div className="max-w-lg mx-auto p-4">
           <AthleteNav />

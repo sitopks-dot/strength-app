@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { createClient } from '@/lib/supabase'
 
 type Player = {
   id: string
@@ -9,6 +10,7 @@ type Player = {
   position: string | null
   weight: number | null
   birth_date: string | null
+  avatar_url: string | null
 }
 
 type PlayerForm = {
@@ -42,6 +44,9 @@ export default function PlayersPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<PlayerForm>(emptyForm)
   const [editId, setEditId] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [avatarUploadId, setAvatarUploadId] = useState<string | null>(null)
+  const supabase = createClient()
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -131,6 +136,39 @@ export default function PlayersPage() {
     if (res.ok) {
       fetchPlayers()
     }
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files || !e.target.files[0] || !avatarUploadId) return
+    const file = e.target.files[0]
+    if (file.size > 2 * 1024 * 1024) {
+      alert('画像サイズは2MB以下にしてください')
+      return
+    }
+
+    const ext = file.name.split('.').pop()
+    const path = `${avatarUploadId}.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true })
+
+    if (uploadError) {
+      alert(`アップロードに失敗しました: ${uploadError.message}`)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+
+    await fetch(`/api/players/${avatarUploadId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatar_url: `${publicUrl}?t=${Date.now()}` }),
+    })
+
+    setAvatarUploadId(null)
+    e.target.value = ''
+    fetchPlayers()
   }
 
   if (loading) {
@@ -262,7 +300,22 @@ export default function PlayersPage() {
               players.map((player) => (
                 <tr key={player.id} className="hover:bg-blue-50">
                   <td className="px-4 py-3 font-bold text-primary">{player.number || '-'}</td>
-                  <td className="px-4 py-3 font-medium">{player.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => { setAvatarUploadId(player.id); avatarInputRef.current?.click() }}
+                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 hover:bg-gray-300 transition overflow-hidden shrink-0"
+                        title="写真を変更"
+                      >
+                        {player.avatar_url ? (
+                          <img src={player.avatar_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          player.name.charAt(0)
+                        )}
+                      </button>
+                      {player.name}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">
                     {player.position && (
                       <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">
@@ -292,6 +345,15 @@ export default function PlayersPage() {
           </tbody>
         </table>
       </div>
+
+      {/* アバターアップロード用hidden input */}
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleAvatarUpload}
+        className="hidden"
+      />
 
       <p className="text-xs text-gray-400 mt-3">登録選手数: {players.length} / 63</p>
     </div>

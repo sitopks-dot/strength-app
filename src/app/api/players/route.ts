@@ -22,7 +22,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, name, number, position, weight, birth_date, role')
+    .select('id, name, number, position, weight, birth_date, avatar_url, role')
     .eq('team_id', DEFAULT_TEAM_ID)
     .eq('role', 'athlete')
     .order('number', { ascending: true })

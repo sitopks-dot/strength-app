@@ -11,7 +11,7 @@ export async function GET() {
   // プロフィール
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, name, number, position, weight, birth_date')
+    .select('id, name, number, position, weight, birth_date, avatar_url')
     .eq('id', user.id)
     .single()
 
