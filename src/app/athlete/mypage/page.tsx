@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { createClient } from '@/lib/supabase'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 type Profile = {
@@ -71,6 +72,8 @@ export default function MypagePage() {
   const [data, setData] = useState<MypageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedExercise, setSelectedExercise] = useState<string>('')
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
 
   const fetchData = useCallback(async () => {
     const res = await fetch('/api/athlete/mypage')
@@ -85,6 +88,38 @@ export default function MypagePage() {
   }, [selectedExercise])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files || !e.target.files[0] || !data) return
+    const file = e.target.files[0]
+    if (file.size > 2 * 1024 * 1024) {
+      alert('画像サイズは2MB以下にしてください')
+      return
+    }
+
+    const ext = file.name.split('.').pop()
+    const path = `${data.profile.id}.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true })
+
+    if (uploadError) {
+      alert(`アップロードに失敗しました: ${uploadError.message}`)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+
+    // プロフィールのavatar_urlを更新
+    await supabase
+      .from('profiles')
+      .update({ avatar_url: `${publicUrl}?t=${Date.now()}` })
+      .eq('id', data.profile.id)
+
+    e.target.value = ''
+    fetchData()
+  }
 
   // 最新の測定値を種目ごとに取得
   const latestValues = useMemo(() => {
@@ -117,13 +152,20 @@ export default function MypagePage() {
       {/* プロフィール */}
       <div className="bg-white rounded-xl p-4 shadow-sm border mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+          <button
+            onClick={() => avatarInputRef.current?.click()}
+            className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl font-bold overflow-hidden hover:opacity-80 transition cursor-pointer relative group"
+            title="写真を変更"
+          >
             {profile.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (
               profile.number || '?'
             )}
-          </div>
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+              <span className="text-white text-xs">変更</span>
+            </div>
+          </button>
           <div>
             <h2 className="text-lg font-bold">{profile.name}</h2>
             <p className="text-sm text-gray-500">
@@ -132,6 +174,13 @@ export default function MypagePage() {
             </p>
           </div>
         </div>
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleAvatarUpload}
+          className="hidden"
+        />
       </div>
 
       {/* ベンチマーク達成状況 */}
